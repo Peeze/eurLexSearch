@@ -1,0 +1,32 @@
+{
+
+  "manifest_version": 3,
+  "name": "EUR-Lex Search",
+  "version": "0.0.1",
+
+  "description": "Adds EUR-Lex search tab to the dock.",
+  "homepage_url" : "https://github.com/Peeze/eurLexSearchFirefox",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "eurlexsearchfirefox@peeze.pt"
+    }
+  },
+
+  "icons": {
+    "16": "images/icon-bitty.png",
+    "48": "images/icon2-small.png",
+    "128": "images/icon2-large.png"
+  },
+
+  "permissions": [
+    "contextMenus"
+  ],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "omnibox": { "keyword" : "eu" }
+
+}
