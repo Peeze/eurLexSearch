@@ -1,12 +1,12 @@
 # EUR-Lex Search extension for Firefox
 
-Browser extension to integrate easier search on the EUR-Lex portal for European law.
+Firefox extension to integrate address bar search on the EUR-Lex portal for European law.
 
 ## Info
 
 Created by [Peeze](https://github.com/Peeze) in summer 2023.
 
-Find [EUR-Lex Search for Firefox on GitHub](https://github.com/Peeze/eurLexSearchFirefox).
+Find [EUR-Lex Search for Firefox on GitHub](https://github.com/Peeze/eurLexSearch).
 
 ## Installation
 
