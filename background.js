@@ -18,6 +18,13 @@ const dictInstrument = {
   "join"               : "JC"
 }
 
+// Set global options
+let globalOptions = {
+    "lang"   : "EN",
+    "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
+    "curia"  : true    // Whether to open case law in curia.europa.eu
+}
+
 // Construct CELEX number from re match
 // CELEX documentation: https://eur-lex.europa.eu/content/help/eurlex-content/celex-number.html
 function encodeCelex(reMatch, celexCodeInstrument) {
@@ -55,7 +62,7 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 
   } else if (["SC", "JC"].includes(celexCodeInstrument)) {
     // For Staff Working Documents, the year comes first
-    // (obsolete, the case is handled by constructURI)
+    // (obsolete, the case is handled by constructURL)
     celexSector = "5";
     celexYear = reMatch[8];
     celexNumber = reMatch[9];
@@ -98,20 +105,21 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 }
 
 
-// Construct uri, depending on type of document
-function constructURI(reMatch) {
+// Construct url, depending on type of document
+function constructURL(reMatch, text) {
 
   // Determine type of instrument
   if (reMatch[1] != undefined) {
     // Secondary legislation, construct CELEX number
     let codeInstrument = dictInstrument[reMatch[1].toLowerCase()];
-    return "CELEX:" + encodeCelex(reMatch, codeInstrument);
+    let uri = "CELEX:" + encodeCelex(reMatch, codeInstrument);
+    return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
 
   } else if (reMatch[4] != undefined) {
     // Case law, not yet implemented
     //let codeInstrument = dictInstrument[reMatch[4].toLowerCase()];
     console.warn("Could not parse document number");
-    return null;
+    return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
 
   } else if (reMatch[7] != undefined) {
     // Preparatory documents
@@ -119,11 +127,12 @@ function constructURI(reMatch) {
     let docYear = reMatch[8];
     let docNumber = reMatch[9];
 
-    return docType + ":" + docYear + ":" + docNumber + ":FIN";
+    let uri = docType + ":" + docYear + ":" + docNumber + ":FIN";
+    return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
 
   } else {
     console.warn("Could not parse document number");
-    return null;
+    return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
   }
 }
 
@@ -144,29 +153,20 @@ function runSearch(text) {
 
     if (reMatch === null) {
       // If no match, start simple search
-      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=en&type=quick&text=${encodeURIComponent(text)}`;
+      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
       browser.tabs.create({ url: newURL });
 
     /*} else if (text[0] === "\"") {
       // If literal search
-      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=en&type=quick&text=${encodeURIComponent(text)}`;
+      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"]}&type=quick&text=${encodeURIComponent(text)}`;
       browser.tabs.create({ url: newURL });
     */
 
     } else {
       // If match, construct CELEX number and open document
-      let uri = constructURI(reMatch);
-
-      if (uri === null) {
-        // Could not be parsed
-        const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=en&type=quick&text=${encodeURIComponent(text)}`;
-        browser.tabs.create({ url: newURL });
-
-      } else {
-        // Open CELEX directly
-        const newURL = `https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=${encodeURIComponent(uri)}`;
-        browser.tabs.create({ url: newURL });
-      }
+      const newURL = constructURL(reMatch, text);
+      console.debug(newURL);
+      browser.tabs.create({ url: newURL });
     }
   }
 }
