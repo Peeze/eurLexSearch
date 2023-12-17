@@ -27,6 +27,7 @@ Currently, the following document types are supported:
 
 I plan to implement the following one day:
 - CJEU case files (in the format `Case C-X/Y`, with `C`/`T`/`F` for the Court of Justice, General Court, and Civil Service Tribunal)
+- Customisable list of common short names (e.g. `GDPR`, `AI Act`, etc.)
 
 ## Examples
 
