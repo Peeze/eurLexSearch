@@ -1,7 +1,7 @@
 // Regular expression, check this: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2046255\
 
 //           Secondary legislation                                                                  | Case law                                  | Commission documents
-const re = /(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\d{1,4})\/(\d{1,4})|(Case C-|Case T-|Case F-)(\d{1,4})\/(\d{2})|(SWD|COM|JOIN)\s*\(?\/?(\d{4})\)?\s*\(?\/?(\d{1,4})\)?/i
+const re = /(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\d{1,4})\/(\d{1,4})|Case (C-|T-|F-)(\d{1,4})\/(\d{2})|(SWD|COM|JOIN)\s*\(?\/?(\d{4})\)?\s*\(?\/?(\d{1,4})\)?/i
 
 // Dicitionary to translate instrument types to CELEX encoding
 const dictInstrument = {
@@ -116,10 +116,14 @@ function constructURL(reMatch, text) {
     return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
 
   } else if (reMatch[4] != undefined) {
-    // Case law, not yet implemented
-    //let codeInstrument = dictInstrument[reMatch[4].toLowerCase()];
-    console.warn("Could not parse document number");
-    return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
+    // Case law, open on curia.europa.eu if global option "curia" is set
+    if (globalOptions["curia"]) {
+      let caseNum = reMatch[4] + reMatch[5] + "/" + reMatch[6];
+      return `https://curia.europa.eu/juris/liste.jsf?num=${caseNum}&language=${globalOptions["lang"].toLowerCase()}`
+    } else {
+      console.warn("Case law, option `curia` is unset, proceed to simple search");
+      return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
+    }
 
   } else if (reMatch[7] != undefined) {
     // Preparatory documents
