@@ -23,10 +23,10 @@ The extension implements two ways to search directly on EUR-Lex.
 In the search string, the extension will try to match the name of a file (e.g. a CELEX document number) and open it directly, discarding the remaining search string. If several file names appear, the first matching file will be opened. If no match is found, the entire string will be submitted to the EUR-Lex quick search function.
 Currently, the following document types are supported:
 - Legal acts (Regulations, Directives, Decisions, Framework Decisions, and Recommendations in CELEX format)
+- CJEU case files (in the format `Case C-X/Y`, with `C`/`T`/`F` for the Court of Justice, General Court, and Civil Service Tribunal) will be opened on `curia.europa.eu` as it provides a more practical overview over all files connected to the case than EUR-Lex
 - Staff Working Documents, Communications, and Joint Communications (in the format `SWD/X/Y` or `SWD(X) Y`, with `SWD`/`COM`/`JOIN` respectively)
 
 I plan to implement the following one day:
-- CJEU case files (in the format `Case C-X/Y`, with `C`/`T`/`F` for the Court of Justice, General Court, and Civil Service Tribunal)
 - Customisable list of common short names (e.g. `GDPR`, `AI Act`, etc.)
 
 ## Examples

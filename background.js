@@ -1,6 +1,6 @@
 // Regular expression, check this: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2046255\
 
-//           Secondary legislation                                                                  | Case law                                  | Commission documents
+//           Secondary legislation                                                                  | Case law                        | Commission documents
 const re = /(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\d{1,4})\/(\d{1,4})|Case (C-|T-|F-)(\d{1,4})\/(\d{2})|(SWD|COM|JOIN)\s*\(?\/?(\d{4})\)?\s*\(?\/?(\d{1,4})\)?/i
 
 // Dicitionary to translate instrument types to CELEX encoding
