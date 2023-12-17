@@ -20,9 +20,15 @@ const dictInstrument = {
 
 // Set global options
 let globalOptions = {
-    "lang"   : "EN",
-    "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
-    "curia"  : true    // Whether to open case law in curia.europa.eu
+  "lang"   : "EN",
+  "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
+  "curia"  : true    // Whether to open case law in curia.europa.eu
+}
+
+// Dicitionary of common names for legal act, to be replaced in search string
+let commonNamesRepl = {
+  "GDPR" : "Regulation 2016/679",
+  "General Data Protection Regulation" : "Regulation 2016/679"
 }
 
 // Construct CELEX number from re match
@@ -106,7 +112,7 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 
 
 // Construct url, depending on type of document
-function constructURL(reMatch, text) {
+function constructURL(reMatch, searchString) {
 
   // Determine type of instrument
   if (reMatch[1] != undefined) {
@@ -122,7 +128,7 @@ function constructURL(reMatch, text) {
       return `https://curia.europa.eu/juris/liste.jsf?num=${caseNum}&language=${globalOptions["lang"].toLowerCase()}`
     } else {
       console.warn("Case law, option `curia` is unset, proceed to simple search");
-      return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
+      return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(searchString)}`;
     }
 
   } else if (reMatch[7] != undefined) {
@@ -136,39 +142,47 @@ function constructURL(reMatch, text) {
 
   } else {
     console.warn("Could not parse document number");
-    return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
+    return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(searchString)}`;
   }
 }
 
 
 // Take text input, run search
-function runSearch(text) {
+function runSearch(searchString) {
   console.log("EUR-Lex Search.");
 
-  if (text === "") {
+  if (searchString === "") {
     // If search string empty, open advanced search
     const advancedSearchURL = 'https://eur-lex.europa.eu/advanced-search-form.html';
     browser.tabs.create({ url: advancedSearchURL });
 
   } else {
-    // If search string not empty, check for match
-    var reMatch = text.match(re);
+    // If search string not empty
+    // Replace common names
+    let searchString_ = searchString;
+    for (commonName of Object.keys(commonNamesRepl)) {
+        searchString_ = searchString_.replaceAll(commonName, commonNamesRepl[commonName]);
+        // Optional todo: construct regex from each commonName to enable case-insensitive search
+    }
+
+    // Check for match
+    let reMatch = searchString_.match(re);
     console.log(reMatch);
 
     if (reMatch === null) {
       // If no match, start simple search
-      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(text)}`;
+      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(searchString)}`;
       browser.tabs.create({ url: newURL });
 
-    /*} else if (text[0] === "\"") {
+    /*} else if (searchString[0] === "\"") {
       // If literal search
-      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"]}&type=quick&text=${encodeURIComponent(text)}`;
+      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"]}&type=quick&text=${encodeURIComponent(searchString)}`;
       browser.tabs.create({ url: newURL });
     */
 
     } else {
       // If match, construct CELEX number and open document
-      const newURL = constructURL(reMatch, text);
+      const newURL = constructURL(reMatch, searchString);
       console.debug(newURL);
       browser.tabs.create({ url: newURL });
     }
@@ -177,8 +191,8 @@ function runSearch(text) {
 
 
 // Add omnibox search
-browser.omnibox.onInputEntered.addListener((text) => {
-  runSearch(text);
+browser.omnibox.onInputEntered.addListener((searchString) => {
+  runSearch(searchString);
 });
 
 
