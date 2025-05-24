@@ -2,7 +2,7 @@
 
   "manifest_version": 3,
   "name": "EUR-Lex Search",
-  "version": "0.0.2",
+  "version": "0.1.0",
 
   "description": "Adds EUR-Lex search tab to the dock.",
   "homepage_url" : "https://github.com/Peeze/eurLexSearchFirefox",
@@ -17,6 +17,10 @@
     "16": "images/icon-bitty.png",
     "48": "images/icon2-small.png",
     "128": "images/icon2-large.png"
+  },
+
+  "options_ui": {
+      "page": "options/options.html"
   },
 
   "permissions": [

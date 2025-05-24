@@ -26,36 +26,32 @@ const dictInstrument = {
   "join"               : "JC"
 }
 
-// Load options from storage
-let globalOptions;
-let commonNames;
-
-if (!localStorage.getItem("globalOptions")) {
-  populateStorage();
-} else {
-  loadStorage();
+// Dicitionary of common names for legal act, to be replaced in search string
+let commonNames = {
+  "GDPR" : "Regulation 2016/679",
+  "General Data Protection Regulation" : "Regulation 2016/679"
 }
+let globalOptions = {
+  "lang": "EN",
+  "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
+  "curia"  : true    // Whether to open case law in curia.europa.eu
+};
 
-// Populate default options
-function populateStorage() {
-  globalOptions = {
-    "lang"   : "EN",
-    "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
-    "curia"  : true    // Whether to open case law in curia.europa.eu
+// Read globalOptions and commonNames from local storage
+function readStorage() {
+  let storedCommonNames = localStorage.getItem("commonNames");
+  if (!storedCommonNames) {
+    console.warn("Cannot load commonNames from storage. Use defaults.");
+  } else {
+    commonNames = JSON.parse(storedCommonNames);
   }
-  localStorage.setItem("globalOptions", JSON.stringify(globalOptions));
 
-  // Dicitionary of common names for legal act, to be replaced in search string
-  commonNames = {
-    "GDPR" : "Regulation 2016/679",
-    "General Data Protection Regulation" : "Regulation 2016/679"
+  let storedOptions = localStorage.getItem("globalOptions");
+  if (!storedOptions) {
+    console.warn("Cannot load globalOptions from storage. Use defaults.");
+  } else {
+    globalOptions = JSON.parse(storedOptions);
   }
-  localStorage.setItem("commonNames", JSON.stringify(commonNames));
-}
-
-function loadStorage() {
-  globalOptions = JSON.parse(localStorage.getItem("globalOptions"));
-  commonNames = JSON.parse(localStorage.getItem("commonNames"));
 }
 
 
@@ -181,6 +177,9 @@ function constructURL(reMatch, searchString) {
 // Take text input, run search
 function runSearch(searchString) {
   console.log("EUR-Lex Search: " + searchString);
+
+  // Update options
+  readStorage();
 
   if (searchString === "") {
     // If search string empty, open advanced search

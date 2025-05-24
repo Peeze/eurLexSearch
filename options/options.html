@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="options.css">
+  </head>
+
+<body>
+  <div id="popup-content">
+    <h1>EUR-Lex Search</h1>
+
+    <h2>Options</h2>
+    <p>
+      <label for="lang">Open documents in:</label>
+      <select id="inputLang" name="lang" id="lang">
+        <option value="BG">Bulgarian</option>
+        <option value="ES">Spanish</option>
+        <option value="CS">Czech</option>
+        <option value="DA">Danish</option>
+        <option value="DE">German</option>
+        <option value="ET">Estonian</option>
+        <option value="EL">Greek</option>
+        <option value="EN">English</option>
+        <option value="FR">French</option>
+        <option value="GA">Gaelic</option>
+        <option value="HR">Croatian</option>
+        <option value="IT">Italian</option>
+        <option value="LV">Latvian</option>
+        <option value="LT">Lithuanian</option>
+        <option value="HU">Hungarian</option>
+        <option value="MT">Maltese</option>
+        <option value="NL">Dutch</option>
+        <option value="PL">Polish</option>
+        <option value="PT">Portuguese</option>
+        <option value="RO">Romanian</option>
+        <option value="SK">Slovak</option>
+        <option value="SL">Slovenian</option>
+        <option value="FI">Finnish</option>
+        <option value="SV">Swedish</option>
+      </select>
+    </p>
+    <p>
+      <label for="docTab">Document tab:</label>
+      <select id="inputDocTab" name="docTab" id="docTab">
+        <option value="TXT">Text</option>
+        <option value="ALL">Document information</option>
+      </select>
+      </p>
+    <p>
+    <label for="curia">Open case law on Curia:</label>
+    <input id="inputCuria" type="checkbox" name="curia" id="curia">
+
+    <hr>
+
+    <h2>Common names</h2>
+    <p>Replace the common name of legislation or cases with their identifier:</p>
+
+    <ul id="commonNamesList" class="deletableList">
+    </ul>
+
+    <p>Add names for your favourite documents</p>
+    <p>
+      <button id="addCommonName">Add</button>
+      <label for="commonName">Replace</label>
+      <input type="text" name="commonName" id="commonName">
+      <label for="commonName">with</label>
+      <input type="text" name="identifier" id="identifier">
+    </p>
+  </div>
+
+  <script src="options.js"></script>
+</body>
