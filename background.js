@@ -6,7 +6,7 @@
 // Regular expression, check this: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2046255\
 // Define regular expression patterns
 const patternLegislation = "(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\\d{1,4})\\/(\\d{1,4})";
-const patternCaseLaw = "(C|T|F|Case)(?:-|–|‑|\\s*)(\\d{1,4})\\/(\\d{2})";
+const patternCaseLaw = "\\b(C|T|F|Case)(?:-|–|‑|\\s*)(\\d{1,4})\\/(\\d{2})";
 const patternComDocs = "(SWD|COM|JOIN)\\s*\\(?\\/?(\\d{4})\\)?\\s*\\(?\\/?(\\d{1,4})\\)?";
 const re = new RegExp(patternLegislation + "|" + patternCaseLaw  + "|" + patternComDocs, "i");
 
