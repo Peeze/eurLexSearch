@@ -17,21 +17,13 @@ Firefox prevents installation of unsigned extenstions. I do not currently distri
 ## Usage
 
 The extension implements two ways to search directly on EUR-Lex.
-1. Omnibox: Type `eu` plus space in the address bar, then type your search term and hit enter.
+1. Omnibox: Type `eu` plus space in the address bar, then type your search term and hit enter. If you do not enter any search term, the extension opens the EUR-Lex advanced search menu.
 2. Context menu: Select text on a website for which you want to search on EUR-Lex. Right-click on the selection and click on `EUR-Lex Search` in the address bar.
 
 In the search string, the extension will try to match the name of a file (e.g. a CELEX document number) and open it directly, discarding the remaining search string. If several file names appear, the first matching file will be opened. If no match is found, the entire string will be submitted to the EUR-Lex quick search function.
 Currently, the following document types are supported:
 - Legal acts (Regulations, Directives, Decisions, Framework Decisions, and Recommendations in CELEX format)
-- CJEU case files (in the format `Case C-X/Y`, with `C`/`T`/`F` for the Court of Justice, General Court, and Civil Service Tribunal) will be opened on `curia.europa.eu` as it provides a more practical overview over all files connected to the case than EUR-Lex
+- CJEU case files (in the format `Case C-X/Y`, with `C`/`T`/`F` for the Court of Justice, General Court, and Civil Service Tribunal) will be opened on `curia.europa.eu` as it provides a more practical overview over all files connected to the case than EUR-Lex (can be disabled in the options)
 - Staff Working Documents, Communications, and Joint Communications (in the format `SWD/X/Y` or `SWD(X) Y`, with `SWD`/`COM`/`JOIN` respectively)
 
-I plan to implement the following one day:
-- Customisable list of common short names (e.g. `GDPR`, `AI Act`, etc.)
-
-## Examples
-
-- `General Data Protection Regulation` will search for the GDPR in EUR-Lex quick search.
-- `Regulation (EU) 2016/679` will directly open the GDPR.
-- `foo Regulation 2016/679 bar` will also open the GDPR.
-- `COM/2012/011 was the proposal for Regulation (EU) 2016/679` will open COM(2012) 11.
+The extension also matches a customisable list of common short names (e.g. `GDPR`, `AI Act`, etc.) and replace them with their relevant CELEX file number. The list can be modified in the options.
