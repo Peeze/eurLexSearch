@@ -20,7 +20,8 @@
   },
 
   "permissions": [
-    "contextMenus"
+    "contextMenus",
+    "storage"
   ],
 
   "background": {
