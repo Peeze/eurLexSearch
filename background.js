@@ -1,7 +1,14 @@
-// Regular expression, check this: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2046255\
+// Browser extension for Firefox
+// Created by [Peeze](https://github.com/Peeze/) some time in 2023
+// Released under Mozilla Public License Version 2.0
 
-//           Secondary legislation                                                                  | Case law                        | Commission documents
-const re = /(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\d{1,4})\/(\d{1,4})|Case (C-|T-|F-)(\d{1,4})\/(\d{2})|(SWD|COM|JOIN)\s*\(?\/?(\d{4})\)?\s*\(?\/?(\d{1,4})\)?/i
+
+// Regular expression, check this: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2046255\
+// Define regular expression patterns
+const patternLegislation = "(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\\d{1,4})\\/(\\d{1,4})";
+const patternCaseLaw = "(C|T|F|Case)(?:-|–|‑|\\s*)(\\d{1,4})\\/(\\d{2})";
+const patternComDocs = "(SWD|COM|JOIN)\\s*\\(?\\/?(\\d{4})\\)?\\s*\\(?\\/?(\\d{1,4})\\)?";
+const re = new RegExp(patternLegislation + "|" + patternCaseLaw  + "|" + patternComDocs, "i");
 
 // Dicitionary to translate instrument types to CELEX encoding
 const dictInstrument = {
@@ -10,43 +17,52 @@ const dictInstrument = {
   "decision"           : "D",
   "recommendation"     : "H",
   "framework decision" : "F",
-  "case c-"            : "CJ",
-  "case t-"            : "TJ",
-  "case f-"            : "FJ",
+  "case"               : "CJ",  // For leniency
+  "c"                  : "CJ",
+  "t"                  : "TJ",
+  "f"                  : "FJ",
   "swd"                : "SC",
   "com"                : "DC",  // "PC" for legislative proposals
   "join"               : "JC"
 }
 
-// Set global options
-let globalOptions = {
-  "lang"   : "EN",
-  "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
-  "curia"  : true    // Whether to open case law in curia.europa.eu
+// Load options from storage
+let globalOptions;
+let commonNames;
+
+if (!localStorage.getItem("globalOptions")) {
+  populateStorage();
+} else {
+  loadStorage();
 }
 
-// Dicitionary of common names for legal act, to be replaced in search string
-let commonNamesRepl = {
-  "GDPR" : "Regulation 2016/679",
-  "General Data Protection Regulation" : "Regulation 2016/679"
+// Populate default options
+function populateStorage() {
+  globalOptions = {
+    "lang"   : "EN",
+    "docTab" : "TXT",  // Which EUR-Lex tab to open, TXT or ALL
+    "curia"  : true    // Whether to open case law in curia.europa.eu
+  }
+  localStorage.setItem("globalOptions", JSON.stringify(globalOptions));
+
+  // Dicitionary of common names for legal act, to be replaced in search string
+  commonNames = {
+    "GDPR" : "Regulation 2016/679",
+    "General Data Protection Regulation" : "Regulation 2016/679"
+  }
+  localStorage.setItem("commonNames", JSON.stringify(commonNames));
 }
+
+function loadStorage() {
+  globalOptions = JSON.parse(localStorage.getItem("globalOptions"));
+  commonNames = JSON.parse(localStorage.getItem("commonNames"));
+}
+
 
 // Construct CELEX number from re match
 // CELEX documentation: https://eur-lex.europa.eu/content/help/eurlex-content/celex-number.html
 function encodeCelex(reMatch, celexCodeInstrument) {
   var celexSector, celexYear, celexNumber;
-
-  /*// Determine type of instrument
-  if (reMatch[1] != undefined) {
-    celexCodeInstrument = dictInstrument[reMatch[1].toLowerCase()];
-  } else if (reMatch[4] != undefined) {
-    celexCodeInstrument = dictInstrument[reMatch[4].toLowerCase()];
-  } else if (reMatch[7] != undefined) {
-    celexCodeInstrument = dictInstrument[reMatch[7].toLowerCase()];
-  } else {
-    console.warn("Could not parse document number");
-    return null;
-  }*/
 
   // Year is first or second part of doc nr, depending on instrument type
   if (["L", "D", "H", "F"].includes(celexCodeInstrument)) {
@@ -66,6 +82,12 @@ function encodeCelex(reMatch, celexCodeInstrument) {
       celexNumber = reMatch[2];
     }
 
+  } else if (["CJ", "TJ", "FJ"].includes(celexCodeInstrument)) {
+    // For case law, the year comes second
+    celexSector = "6";
+    celexYear = reMatch[6];
+    celexNumber = reMatch[5];
+
   } else if (["SC", "JC"].includes(celexCodeInstrument)) {
     // For Staff Working Documents, the year comes first
     // (obsolete, the case is handled by constructURL)
@@ -75,7 +97,7 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 
   } else {
     // Instrument type not yet implemented
-    console.warn("Could not parse document number");
+    console.warn("Could not parse document number. No matching CELEX code \""+ celexCodeInstrument + "\".");
     return null;
   }
 
@@ -89,13 +111,13 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 
     } else {
       // Give up
-      console.warn("Could not parse document number");
+      console.warn("Could not parse document number. Invalid year \"" + celexYear + "\".");
       return null;
     }
   }
 
   // Make year 4-digit
-  if (celexYear.length == 2) {
+  if (celexYear.length === 2) {
     if (parseInt(celexYear) > 50) {
       celexYear = "19" + celexYear;
     } else {
@@ -115,24 +137,33 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 function constructURL(reMatch, searchString) {
 
   // Determine type of instrument
-  if (reMatch[1] != undefined) {
+  if (reMatch[1] !== undefined) {
     // Secondary legislation, construct CELEX number
     let codeInstrument = dictInstrument[reMatch[1].toLowerCase()];
     let uri = "CELEX:" + encodeCelex(reMatch, codeInstrument);
     return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
 
-  } else if (reMatch[4] != undefined) {
-    // Case law, open on curia.europa.eu if global option "curia" is set
+  } else if (reMatch[4] !== undefined) {
+    // Case law, open on curia.europa.eu if global option "curia" is set (recommended)
     if (globalOptions["curia"]) {
-      let caseNum = reMatch[4] + reMatch[5] + "/" + reMatch[6];
+      // Open case file on curia.europa.eu
+      let caseNum;
+      if (reMatch[4].toLowerCase() === "case") {
+        // For leniency, accept that "Case 12/34" should be "Case C-12/34"
+        caseNum = "C-" + reMatch[5] + "/" + reMatch[6];
+      } else {
+        caseNum = reMatch[4] + "-" + reMatch[5] + "/" + reMatch[6];
+      }
       return `https://curia.europa.eu/juris/liste.jsf?num=${caseNum}&language=${globalOptions["lang"].toLowerCase()}`
     } else {
-      console.warn("Case law, option `curia` is unset, proceed to simple search");
-      return `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(searchString)}`;
+      // Open case file on eur-lex.europa.eu
+      let codeInstrument = dictInstrument[reMatch[4].toLowerCase()];
+      let uri = "CELEX:" + encodeCelex(reMatch, codeInstrument);
+      return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
     }
 
-  } else if (reMatch[7] != undefined) {
-    // Preparatory documents
+  } else if (reMatch[7] !== undefined) {
+    // Commission documents
     let docType = reMatch[7].toUpperCase();
     let docYear = reMatch[8];
     let docNumber = reMatch[9];
@@ -149,7 +180,7 @@ function constructURL(reMatch, searchString) {
 
 // Take text input, run search
 function runSearch(searchString) {
-  console.log("EUR-Lex Search.");
+  console.log("EUR-Lex Search: " + searchString);
 
   if (searchString === "") {
     // If search string empty, open advanced search
@@ -159,30 +190,30 @@ function runSearch(searchString) {
   } else {
     // If search string not empty
     // Replace common names
-    let searchString_ = searchString;
-    for (commonName of Object.keys(commonNamesRepl)) {
-        searchString_ = searchString_.replaceAll(commonName, commonNamesRepl[commonName]);
-        // Optional todo: construct regex from each commonName to enable case-insensitive search
+    let originalSearchString = searchString;
+    for (commonName of Object.keys(commonNames)) {
+        searchString = searchString.replaceAll(new RegExp(commonName, "ig"), commonNames[commonName]);
+        // Optional TODO: pre-compile regex for improved performance
     }
 
     // Check for match
-    let reMatch = searchString_.match(re);
+    let reMatch = searchString.match(re);
     console.log(reMatch);
 
     if (reMatch === null) {
       // If no match, start simple search
-      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(searchString)}`;
+      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"].toLowerCase()}&type=quick&text=${encodeURIComponent(originalSearchString)}`;
       browser.tabs.create({ url: newURL });
 
-    /*} else if (searchString[0] === "\"") {
+    /*} else if (originalSearchString[0] === "\"") {
       // If literal search
-      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"]}&type=quick&text=${encodeURIComponent(searchString)}`;
+      const newURL = `https://eur-lex.europa.eu/search.html?scope=EURLEX&lang=${globalOptions["lang"]}&type=quick&text=${encodeURIComponent(originalSearchString)}`;
       browser.tabs.create({ url: newURL });
     */
 
     } else {
       // If match, construct CELEX number and open document
-      const newURL = constructURL(reMatch, searchString);
+      const newURL = constructURL(reMatch, originalSearchString);
       console.debug(newURL);
       browser.tabs.create({ url: newURL });
     }
