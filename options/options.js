@@ -10,25 +10,33 @@ let globalOptions = {
 
 // Read globalOptions and commonNames from local storage
 function readStorage() {
-  let storedCommonNames = localStorage.getItem("commonNames");
-  if (!storedCommonNames) {
-    console.warn("Cannot load commonNames from storage.");
-  } else {
-    commonNames = JSON.parse(storedCommonNames);
-  }
+  chrome.storage.local.get(["commonNames"])
+    .then((result) => {
+      commonNames = JSON.parse(result.commonNames);
+    })
+    .catch((result) => {
+      console.warn("Cannot load commonNames from storage. Use defaults.");
+    })
+    .finally(() => {
+      setCommonNamesList();
+    });
 
-  let storedOptions = localStorage.getItem("globalOptions");
-  if (!storedOptions) {
-    console.warn("Cannot load globalOptions from storage.");
-  } else {
-    globalOptions = JSON.parse(storedOptions);
-  }
+  chrome.storage.local.get(["globalOptions"])
+    .then((result) => {
+      globalOptions = JSON.parse(result.globalOptions);
+    })
+    .catch((result) => {
+      console.warn("Cannot load globalOptions from storage. Use defaults.");
+    })
+    .finally(() => {
+      setInputs();
+    });
 }
 
 // Write globalOptions and commonNames to local storage
 function writeStorage() {
-  localStorage.setItem("commonNames", JSON.stringify(commonNames));
-  localStorage.setItem("globalOptions", JSON.stringify(globalOptions));
+  chrome.storage.local.set({"commonNames": JSON.stringify(commonNames)});
+  chrome.storage.local.set({"globalOptions": JSON.stringify(globalOptions)});
 }
 
 // Options //
@@ -115,5 +123,3 @@ document.getElementById("addCommonName").addEventListener("click", (e) => {
 
 // Run //
 readStorage();
-setInputs();
-setCommonNamesList();

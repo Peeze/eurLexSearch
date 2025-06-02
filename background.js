@@ -39,19 +39,21 @@ let globalOptions = {
 
 // Read globalOptions and commonNames from local storage
 function readStorage() {
-  let storedCommonNames = localStorage.getItem("commonNames");
-  if (!storedCommonNames) {
-    console.warn("Cannot load commonNames from storage. Use defaults.");
-  } else {
-    commonNames = JSON.parse(storedCommonNames);
-  }
+  chrome.storage.local.get(["commonNames"])
+    .then((result) => {
+      commonNames = JSON.parse(result.commonNames);
+    })
+    .catch((result) => {
+      console.warn("Cannot load commonNames from storage. Use defaults.");
+    });
 
-  let storedOptions = localStorage.getItem("globalOptions");
-  if (!storedOptions) {
-    console.warn("Cannot load globalOptions from storage. Use defaults.");
-  } else {
-    globalOptions = JSON.parse(storedOptions);
-  }
+  chrome.storage.local.get(["globalOptions"])
+    .then((result) => {
+      globalOptions = JSON.parse(result.globalOptions);
+    })
+    .catch((result) => {
+      console.warn("Cannot load globalOptions from storage. Use defaults.");
+    });
 }
 
 
@@ -179,6 +181,7 @@ function runSearch(searchString) {
   console.log("EUR-Lex Search: " + searchString);
 
   // Update options
+  // TODO: Reading from storage is asynchronous, fix race condition
   readStorage();
 
   if (searchString === "") {
@@ -219,6 +222,11 @@ function runSearch(searchString) {
   }
 }
 
+// On Chrome, define browser
+var browser;
+if (!browser) {
+  browser = chrome;
+}
 
 // Add omnibox search
 browser.omnibox.onInputEntered.addListener((searchString) => {
