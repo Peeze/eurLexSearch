@@ -10,15 +10,19 @@ Find [EUR-Lex Search for Firefox on GitHub](https://github.com/Peeze/eurLexSearc
 
 ## Installation
 
-Package extenstion like [so](https://extensionworkshop.com/documentation/publish/package-your-extension/).
+Installation from [Add-ons for Firefox](https://addons.mozilla.org) coming soon.
 
-Firefox prevents installation of unsigned extenstions. I do not currently distribute the signed package. To get it signed, follow [these instructions](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/#self-distribution).
+Package extenstion like [so](https://extensionworkshop.com/documentation/publish/package-your-extension/).
 
 ## Usage
 
 The extension implements two ways to search directly on EUR-Lex.
-1. Omnibox: Type `eu` plus space in the address bar, then type your search term and hit enter. If you do not enter any search term, the extension opens the EUR-Lex advanced search menu.
-2. Context menu: Select text on a website for which you want to search on EUR-Lex. Right-click on the selection and click on `EUR-Lex Search` in the address bar.
+1. **Omnibox:** Type `eu` plus space in the address bar, then type your search term and hit enter. If you do not enter any search term, the extension opens the EUR-Lex advanced search menu.
+![EUR-Lex Search in the Omnibox](/images/readme_omnibox.png?raw=true)
+
+2. **Context menu:** Select text on a website for which you want to search on EUR-Lex. Right-click on the selection and click on `EUR-Lex Search`.
+![EUR-Lex Search in the Context menu](/images/readme_context_menu.png?raw=true)
+
 
 In the search string, the extension will try to match the name of a file (e.g. a CELEX document number) and open it directly, discarding the remaining search string. If several file names appear, the first matching file will be opened. If no match is found, the entire string will be submitted to the EUR-Lex quick search function.
 Currently, the following document types are supported:
