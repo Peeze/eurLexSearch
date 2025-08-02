@@ -5,9 +5,9 @@
 
 // Regular expression, check this: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2046255\
 // Define regular expression patterns
-const patternLegislation = "(Regulation|Directive|Framework Decision|Decision|Recommendation).*?(\\d{1,4})\\/(\\d{1,4})";
-const patternCaseLaw = "\\b(C|T|F|Case)(?:-|–|‑|\\s*)(\\d{1,4})\\/(\\d{2})";
-const patternComDocs = "(SWD|COM|JOIN)\\s*\\(?\\/?(\\d{4})\\)?\\s*\\(?\\/?(\\d{1,4})\\)?";
+const patternLegislation = "(?<leg_type>Regulation|Directive|Framework Decision|Decision|Recommendation)\\s*(?<leg_decor1>\\((?:EU|EC|EEC)\\))?.*?(?<leg_decor2>No\\.?)?\\s*(?<leg_no1>\\d{1,4})\\/(?<leg_no2>\\d{1,4})";
+const patternCaseLaw = "\\b(?<cl_type>C|T|F|Case)(?:-|–|‑|\\s*)(?<cl_no1>\\d{1,4})\\/(?<cl_no2>\\d{2})";
+const patternComDocs = "(?<cd_type>SWD|COM|JOIN)\\s*\\(?\\/?(?<cd_no1>\\d{4})\\)?\\s*\\(?\\/?(?<cd_no2>\\d{1,4})\\)?";
 const re = new RegExp(patternLegislation + "|" + patternCaseLaw  + "|" + patternComDocs, "i");
 
 // Dicitionary to translate instrument types to CELEX encoding
@@ -64,32 +64,33 @@ function encodeCelex(reMatch, celexCodeInstrument) {
   if (["L", "D", "H", "F"].includes(celexCodeInstrument)) {
     // For Directives/Decisions/Recommendations/etc., the year comes first
     celexSector = "3";
-    celexYear = reMatch[2];
-    celexNumber = reMatch[3];
+    celexYear = reMatch.groups["leg_no1"];
+    celexNumber = reMatch.groups["leg_no2"];
 
   } else if (["R"].includes(celexCodeInstrument)) {
     // For Regulations, the year comes first since 2015
+    // Presence of "No" before the number indicates that year comes second
     celexSector = "3";
-    if (parseInt(reMatch[2]) >= 2015) {
-      celexYear = reMatch[2];
-      celexNumber = reMatch[3];
+    if (reMatch.groups["leg_decor2"] === undefined && parseInt(reMatch.groups["leg_no1"]) >= 2015) {
+      celexYear = reMatch.groups["leg_no1"];
+      celexNumber = reMatch.groups["leg_no2"];
     } else {
-      celexYear = reMatch[3];
-      celexNumber = reMatch[2];
+      celexYear = reMatch.groups["leg_no2"];
+      celexNumber = reMatch.groups["leg_no1"];
     }
 
   } else if (["CJ", "TJ", "FJ"].includes(celexCodeInstrument)) {
     // For case law, the year comes second
     celexSector = "6";
-    celexYear = reMatch[6];
-    celexNumber = reMatch[5];
+    celexYear = reMatch.groups["cl_no2"];
+    celexNumber = reMatch.groups["cl_no1"];
 
   } else if (["SC", "JC"].includes(celexCodeInstrument)) {
     // For Staff Working Documents, the year comes first
     // (obsolete, the case is handled by constructURL)
     celexSector = "5";
-    celexYear = reMatch[8];
-    celexNumber = reMatch[9];
+    celexYear = reMatch.groups["cd_no1"];
+    celexNumber = reMatch.groups["cd_no2"];
 
   } else {
     // Instrument type not yet implemented
@@ -133,36 +134,36 @@ function encodeCelex(reMatch, celexCodeInstrument) {
 function constructURL(reMatch, searchString) {
 
   // Determine type of instrument
-  if (reMatch[1] !== undefined) {
+  if (reMatch.groups["leg_type"] !== undefined) {
     // Secondary legislation, construct CELEX number
-    let codeInstrument = dictInstrument[reMatch[1].toLowerCase()];
+    let codeInstrument = dictInstrument[reMatch.groups["leg_type"].toLowerCase()];
     let uri = "CELEX:" + encodeCelex(reMatch, codeInstrument);
     return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
 
-  } else if (reMatch[4] !== undefined) {
+  } else if (reMatch.groups["cl_type"] !== undefined) {
     // Case law, open on curia.europa.eu if global option "curia" is set (recommended)
     if (globalOptions["curia"]) {
       // Open case file on curia.europa.eu
       let caseNum;
-      if (reMatch[4].toLowerCase() === "case") {
+      if (reMatch.groups["cl_type"].toLowerCase() === "case") {
         // For leniency, accept that "Case 12/34" should be "Case C-12/34"
-        caseNum = "C-" + reMatch[5] + "/" + reMatch[6];
+        caseNum = "C-" + reMatch.groups["cl_no1"] + "/" + reMatch.groups["cl_no2"];
       } else {
-        caseNum = reMatch[4] + "-" + reMatch[5] + "/" + reMatch[6];
+        caseNum = reMatch.groups["cl_type"] + "-" + reMatch.groups["cl_no1"] + "/" + reMatch.groups["cl_no2"];
       }
       return `https://curia.europa.eu/juris/liste.jsf?num=${caseNum}&language=${globalOptions["lang"].toLowerCase()}`
     } else {
       // Open case file on eur-lex.europa.eu
-      let codeInstrument = dictInstrument[reMatch[4].toLowerCase()];
+      let codeInstrument = dictInstrument[reMatch.groups["cl_type"].toLowerCase()];
       let uri = "CELEX:" + encodeCelex(reMatch, codeInstrument);
       return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
     }
 
-  } else if (reMatch[7] !== undefined) {
+  } else if (reMatch.groups["cd_type"] !== undefined) {
     // Commission documents
-    let docType = reMatch[7].toUpperCase();
-    let docYear = reMatch[8];
-    let docNumber = reMatch[9];
+    let docType = reMatch.groups["cd_type"].toUpperCase();
+    let docYear = reMatch.groups["cd_no1"];
+    let docNumber = reMatch.groups["cd_no2"];
 
     let uri = docType + ":" + docYear + ":" + docNumber + ":FIN";
     return `https://eur-lex.europa.eu/legal-content/${globalOptions["lang"]}/${globalOptions["docTab"]}/?uri=${encodeURIComponent(uri)}`;
